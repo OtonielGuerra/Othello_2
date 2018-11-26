@@ -1,6 +1,7 @@
 {
   "projects": {
     "default": "test-juego-9c9fc",
-    "test-juego": "test-juego-9c9fc"
+    "test-juego": "test-juego-9c9fc",
+    "Juan": "test-juego-9c9fc"
   }
 }

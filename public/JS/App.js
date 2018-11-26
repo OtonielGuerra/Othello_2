@@ -4,8 +4,21 @@ document.addEventListener("keydown", movimiento);
 //Codigo para declarar un espacio del archivo para trabajar
 var canvas = document.getElementById('fondo');
 
+//boton turno
+var btnTurno = document.getElementById('btnTurno');
+
 //Codigo para declarar que las imagenes son 2d
 var lapiz = canvas.getContext('2d');
+var labelNegra = document.getElementById('lblNegro');
+var labelBlanca = document.getElementById('lblBlanco');
+var contNegras = 0
+var contBlancas = 0
+
+//Login y logout
+var refDB = firebase.database().ref('usuarios');
+var btnLogin = document.getElementById('login');
+var btnLogout = document.getElementById('logout');
+var txtDisplayName = document.getElementById('txtDisplayName');
 
 //Variable para declarar Array
 var matriz = new Array(8);
@@ -15,8 +28,7 @@ var x = 5;
 var y = 5;
 
 // fichas ganadoras
-var BF = 0;
-var NF = 0;
+
 var cont = 0;
 
 //switch
@@ -49,6 +61,28 @@ var fichaNegra = {
     image: Image,
     cargaOK: false
 };
+
+//funcion btnTurno
+btnTurno.addEventListener('click', function() {
+    WS = false;
+    turno();
+    if (fichaBlanca.cargaOK == true) {
+        fichaBlanca.cargaOK == false;
+    } else {
+        fichaBlanca.cargaOK == true;
+    }
+    if (fichaNegra.cargaOK == true) {
+        fichaNegra.cargaOK == false;
+    } else {
+        fichaNegra.cargaOK == true;
+    }
+    x = 5;
+    y = 5;
+    basicas();
+    contador();
+    cont = cont - 1;
+    console.log(cont);
+});
 
 //Codigo que dice que las imagenes son de tipo Image
 fondo.imagen = new Image();
@@ -90,9 +124,6 @@ function iniciarMatriz() {
 
 //Funcion para regresar ficha
 function regresar() {
-    if (cont == 60) {
-        MensajeGanador();
-    }
     if (noTurno == true) {
         lapiz.drawImage(fichaNegra.imagen, x, y);
     } else {
@@ -192,7 +223,9 @@ function movimiento(evento) {
             x = 5;
             y = 5;
             basicas();
+            contador();
             console.log(cont);
+            MensajeGanador();
             break;
     }
 }
@@ -404,8 +437,10 @@ function basicas() {
 function turno() {
     if (WS == false) {
         if (noTurno == true) {
+            console.log('cambio a color blanco');
             noTurno = false;
         } else {
+            console.log('cambio a color negro');
             noTurno = true;
         }
         WS = true;
@@ -415,26 +450,75 @@ function turno() {
 
 //Mensaje Ganador
 function MensajeGanador() {
+    if (cont == 60) {
+        if (contNegras + contBlancas == 64) {
+            if (contNegras > contBlancas) {
+                alert("Gana La Ficha Negra");
+                console.log(contNegras);
+            }
+            if (contBlancas > contNegras) {
+                alert("Gana La Ficha Blanca");
+                console.log(contBlancas);
+            }
+            if (contBlancas == contNegras) {
+                alert("Empate");
+            }
+        }
+        location.reload();
+    }
+}
+
+function contador() {
+    var CN = 0;
+    var CB = 0;
     for (var i = 0; i < matriz.length; i++) {
         for (var j = 0; j < matriz.length; j++) {
             if (matriz[i][j] == "fb") {
-                BF = BF + 1;
+                CB++;
             }
             if (matriz[i][j] == "fn") {
-                NF = NF + 1;
+                CN++;
             }
         }
     }
-    if (BF + NF == 64) {
-        if (NF > BF) {
-            alert("Gana La Ficha Negra");
-        }
-        if (Bf > NF) {
-            alert("Gana La Ficha Blanca");
-        }
-        if (BF == NF) {
-            alert("Empate");
-        }
-    }
-    location.reload();
+    contNegras = CN;
+    contBlancas = CB;
+    labelNegra.value = CN + " fichas negras";
+    labelBlanca.value = CB + " fichas blancas";
 }
+
+//Logearse
+btnLogin.addEventListener('click', function() {
+    event.preventDefault();
+    var provider = new firebase.auth.GoogleAuthProvider();
+    provider.addScope('https://www.googleapis.com/auth/contacts.readonly');
+    firebase.auth().signInWithPopup(provider).then(function(datos) {
+        usuario = {
+            displayName: datos.user.displayName,
+            email: datos.user.email,
+            uid: datos.user.uid
+        };
+        agregar(usuario.uid, usuario);
+        alert("Sesión iniciada");
+        login.style.display = 'none'
+        logout.style.display = 'block'
+        var user = refDB.child(firebase.auth().currentUser.uid).once('value', function(data) {
+            txtDisplayName = data.val().displayName;
+            alert(txtDisplayName);
+        });
+    });
+});
+
+//Salir
+btnLogout.addEventListener('click', function() {
+    firebase.auth().signOut();
+    alert("Cesión cerrada");
+    login.style.display = 'block'
+    logout.style.display = 'none'
+});
+
+//agregar
+function agregar(uid, usuario) {
+    refDB.child(uid).set(usuario);
+    almacen = usuario
+};

@@ -1,7 +1,7 @@
 var refDB = firebase.database().ref('usuarios');
 var refImg = firebase.storage().ref();
 var btnLogin = document.getElementById('login');
-var btnLogout = document.getElementById('logout')
+var btnLogout = document.getElementById('logout');
 var btnPerfil = document.getElementById('perfil');
 var btnGuardar = document.getElementById('guardar');
 var txtDisplayName = document.getElementById('txtDisplayName');
@@ -40,6 +40,7 @@ btnLogin.addEventListener('click', function() {
             email: datos.user.email,
             uid: datos.user.uid
         };
+        location.reload();
         agregar(usuario.uid, usuario);
         alert("Sesión iniciada");
     });
